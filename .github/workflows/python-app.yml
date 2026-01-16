@@ -31,20 +31,11 @@ jobs:
       with:
         name: TXD_Converter_Release
         path: "dist/TXD Converter.exe"
-    - name: Zip archive
-      uses: vimtor/action-zip@v1
-      with:
-          files: |
-            ./README.md
-            dist/*.exe
-          dest: Release.zip
     - name: Release build
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "Latest"
-        prerelease: false
-        title: "Release Build"
         files: |
-          Release.zip
+          dist/TXD Converter.exe
         
