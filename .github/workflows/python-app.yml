@@ -36,7 +36,7 @@ jobs:
       with:
           files: |
             ./README.md
-            "dist/TXD Converter.exe"
+            dist/*.exe
           dest: Release.zip
     - name: Release build
       uses: "marvinpinto/action-automatic-releases@latest"
