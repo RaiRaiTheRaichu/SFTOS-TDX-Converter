@@ -1,3 +1,8 @@
+import sys
+
+def get_save_output():
+    return not '--dryrun' in sys.argv
+
 def get_palette(color_palette: bytes, mode: str):
     rgb_array = bytearray()
     alpha_array = bytearray()

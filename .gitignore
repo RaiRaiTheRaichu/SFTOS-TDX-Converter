@@ -6,4 +6,5 @@ dist
 *.tmp
 *.txd
 *.spec
+*.log
 references
