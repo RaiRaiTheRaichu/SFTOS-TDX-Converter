@@ -7,11 +7,11 @@ def get_palette(color_palette: bytes, mode: str):
     else:
         palette_size = 256
 
-    # Color data is stored BGRA
+    # Color data is stored RGBA, little endian
     for color_entry in range(palette_size):
-        b = color_palette[color_entry * 4]
+        r = color_palette[color_entry * 4]
         g = color_palette[color_entry * 4 + 1]
-        r = color_palette[color_entry * 4 + 2]
+        b = color_palette[color_entry * 4 + 2]
         a = color_palette[color_entry * 4 + 3]
 
         rgb_array.extend([r,g,b])
