@@ -1,6 +1,6 @@
 import sys
 
-def get_save_output():
+def get_save_option():
     return not '--dryrun' in sys.argv
 
 def get_palette(color_palette: bytes, mode: int):

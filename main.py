@@ -10,7 +10,7 @@ import swizzle
 
 images_failed_to_convert = []
 
-def convert_texture(tdx_file):
+def convert_texture(tdx_file: str) -> Image:
     with open(tdx_file, mode='rb') as file:
         # Get what we need from the header
         file.seek(int('0x0000004', base=16))
@@ -32,7 +32,7 @@ def convert_texture(tdx_file):
             is_pal_swizzled = True
         elif not swizzle_pattern == 2:
             log.warning(f'Unhandled swizzle flag ({swizzle_pattern}. Skipping...)')
-            return False
+            return
 
         log.debug(f'Swizzled: {is_swizzled}, Palette swizzled: {is_pal_swizzled}')
 
@@ -61,7 +61,7 @@ def convert_texture(tdx_file):
             pixel_data = file.read(width * height)
         else:
             log.error(f'Error! File is neither 4bpp or 8bpp. Skipping...')
-            return False
+            return
 
         # Handle swizzled pixels
         if is_swizzled:
@@ -69,25 +69,22 @@ def convert_texture(tdx_file):
                 log.debug(f'Running 8bpp unswizzle algorithm')
                 try:
                     pixel_data = swizzle.unswizzle_i8(width, height, pixel_data)
-                except IndexError:
-                    log.error(f'Error thrown while unswizzling 8bpp texture. Skipping...')
-                    return False
+                except:
+                    log.error(f'Error thrown while unswizzling 8bpp texture. Skipping...', exc_info=True)
+                    return
             if bpp == 4:
                 log.debug(f'Running 4bpp unswizzle algorithm')
                 try:
                     pixel_data = swizzle.unswizzle_i4(width, height, pixel_data)
-                except IndexError:
-                    log.error(f'Error thrown while unswizzling 4bpp texture. Skipping...')
-                    return False
+                except:
+                    log.error(f'Error thrown while unswizzling 4bpp texture. Skipping...', exc_info=True)
+                    return
 
         # Convert 4BPP to 8BPP
         if bpp == 4:
             log.debug(f'4bpp pixel data length: {len(pixel_data)}')
             if not len(pixel_data) == width*height:
                 pixel_data = helpers.convert_to_8bpp(pixel_data)
-
-        log.debug(f'8bpp pixel data length: {len(pixel_data)}')
-        assert len(pixel_data) == width*height, f'Pixel data does not contain the expected number of pixels for this image!\nExpected: {width*height}, got {len(pixel_data)}'
 
         # Build converted PNG image
         converted_image = Image.new("P",(width, height))
@@ -98,13 +95,8 @@ def convert_texture(tdx_file):
         converted_image.convert("RGBA")
         converted_image.info["transparency"] = bytes(alpha_palette)
 
-        # Save the image
-        if helpers.get_save_output():
-            converted_image.save(f'{filename[:-4]}.png', "PNG")
-        else:
-            converted_image.show()
-        log.debug(f'Converted image successfully written to disk.')
-        return True
+        # Pass back our newly created Image
+        return converted_image
 
 # ---Main function---
 # Logging
@@ -113,18 +105,27 @@ log = logger_utils.instantiate_logger()
 # File handling
 files_to_convert = filedialog.askopenfilenames(filetypes=[('TDX files', "*.tdx")])
 
-if files_to_convert == "NULL":
+if not files_to_convert:
     exit()
 
 counter = 0
 for filename in files_to_convert:
     log.debug(f'Attempting to convert {filename}')
-    result = convert_texture(filename)
-    if result:
-        counter += 1
-    else:
-        log.error(f'IndexError caught in file {filename}')
+
+    image = convert_texture(filename)
+
+    if not image:
+        log.error(f'Failed to convert file: {filename}')
         images_failed_to_convert.append(filename)
+        continue
+
+    # Save the image
+    if helpers.get_save_option():
+        image.save(f'{filename[:-4]}.png', "PNG")
+        log.debug(f'Converted image successfully written to disk.')
+    else:
+        image.show()
+    counter += 1
 
 log.debug(f'Conversion completed. ({counter}/{len(files_to_convert)} files successfully converted.)')
 
