@@ -29,6 +29,6 @@ def convert_to_8bpp(pixel_data: bytes):
     for pixel in pixel_data:
         first_pixel = (pixel >> 4) & 0x0F
         second_pixel = pixel & 0x0F
-        converted_8bpp.append(first_pixel)
         converted_8bpp.append(second_pixel)
+        converted_8bpp.append(first_pixel)
     return converted_8bpp
