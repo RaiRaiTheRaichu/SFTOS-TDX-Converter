@@ -3,7 +3,7 @@ import sys
 def get_save_output():
     return not '--dryrun' in sys.argv
 
-def get_palette(color_palette: bytes, mode: str):
+def get_palette(color_palette: bytes, mode: int):
     rgb_array = bytearray()
     alpha_array = bytearray()
 

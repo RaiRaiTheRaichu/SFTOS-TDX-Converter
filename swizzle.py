@@ -1,5 +1,7 @@
-# Unswizzling functions taken from https://github.com/neko68k/rtftool
+# Pixel unswizzling functions taken from https://github.com/neko68k/rtftool
 # Full credit to Neko68k for the algorithms.
+# Palette unswizzling function taken from https://github.com/bartlomiejduda/ReverseBox
+# Full credit to bartlomiejduda for the algorithm.
 
 def unswizzle_i8(w: int, h: int, in_pixels: bytes) -> bytearray:
     out_pixels = bytearray(w * h)
@@ -63,3 +65,30 @@ def unswizzle_i4(w: int, h: int, in_bytes: bytes) -> bytearray:
                 out_bytes[out_idx] = (entry << 4) | (out_bytes[out_idx] & 0x0F)
 
     return out_bytes
+
+def unswizzle_palette(palette_data: bytes) -> bytes:
+    bytes_per_palette_pixel: int = 4
+    converted_palette_data: bytes = b""
+
+    parts: int = int(len(palette_data) / 32)
+    stripes: int = 2
+    colors: int = 8
+    blocks: int = 2
+    index: int = 0
+
+    for part in range(parts):
+        for block in range(blocks):
+            for stripe in range(stripes):
+                for color in range(colors):
+                    palette_index: int = (
+                        index
+                        + part * colors * stripes * blocks
+                        + block * colors
+                        + stripe * stripes * colors
+                        + color
+                    )
+                    palette_offset: int = palette_index * bytes_per_palette_pixel
+                    palette_entry = palette_data[palette_offset: palette_offset + bytes_per_palette_pixel]
+                    converted_palette_data += palette_entry
+
+    return converted_palette_data

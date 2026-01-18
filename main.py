@@ -18,23 +18,41 @@ def convert_texture(tdx_file):
         height = int.from_bytes(file.read(2), byteorder='little')
         bpp = int.from_bytes(file.read(1), byteorder='little')
 
-        log.debug(f'Width: {width}, Height: {height}, BPP: {bpp}\n(Total required pixels for 8bpp output: {width * height})')
+        log.debug(f'Width: {width}, Height: {height}, BPP: {bpp} (Required pixels for 8bpp output: {width * height})')
 
         # Swizzle data
         file.seek(int('0x00000106', base=16))
         swizzle_pattern = int.from_bytes(file.read(1), byteorder='little')
         is_swizzled = False
-        if swizzle_pattern == 1:    # 01 = swizzled, 02 = not swizzled
+        is_pal_swizzled = False
+        if swizzle_pattern == 1:    # 01 = swizzled, 02 = not swizzled, 08 = swizzled pixels + swizzled palette
             is_swizzled = True
+        elif swizzle_pattern == 8:
+            is_swizzled = True
+            is_pal_swizzled = True
+        elif not swizzle_pattern == 2:
+            log.warning(f'Unhandled swizzle flag ({swizzle_pattern}. Skipping...)')
+            return False
 
-        log.debug(f'Is swizzled: {is_swizzled}')
+        log.debug(f'Swizzled: {is_swizzled}, Palette swizzled: {is_pal_swizzled}')
 
         # Palette data
-        file.seek(int('0x00000160', base=16))
-        rgb_palette, alpha_palette = helpers.get_palette(file.read(1024), bpp)
+        if is_pal_swizzled:
+            log.debug(f'Running palette unswizzle algorithm')
+            file.seek(int('0x000001E0', base=16))
+            palette = swizzle.unswizzle_palette(file.read(1024))
+        else:
+            file.seek(int('0x00000160', base=16))
+            palette = file.read(1024)
+
+        rgb_palette, alpha_palette = helpers.get_palette(palette, bpp)
 
         # Pixel data
-        file.seek(int('0x00000560', base=16))
+        if is_pal_swizzled:
+            file.seek(int('0x000005E0', base=16))
+        else:
+            file.seek(int('0x00000560', base=16))
+
         if bpp == 4:
             log.debug(f'4bpp, reading pixel data')
             pixel_data = file.read(math.floor((width * height) / 2))
@@ -43,17 +61,24 @@ def convert_texture(tdx_file):
             pixel_data = file.read(width * height)
         else:
             log.error(f'Error! File is neither 4bpp or 8bpp. Skipping...')
-            images_failed_to_convert.append(tdx_file)
-            return
+            return False
 
         # Handle swizzled pixels
         if is_swizzled:
             if bpp == 8:
                 log.debug(f'Running 8bpp unswizzle algorithm')
-                pixel_data = swizzle.unswizzle_i8(width, height, pixel_data)
+                try:
+                    pixel_data = swizzle.unswizzle_i8(width, height, pixel_data)
+                except IndexError:
+                    log.error(f'Error thrown while unswizzling 8bpp texture. Skipping...')
+                    return False
             if bpp == 4:
                 log.debug(f'Running 4bpp unswizzle algorithm')
-                pixel_data = swizzle.unswizzle_i4(width, height, pixel_data)
+                try:
+                    pixel_data = swizzle.unswizzle_i4(width, height, pixel_data)
+                except IndexError:
+                    log.error(f'Error thrown while unswizzling 4bpp texture. Skipping...')
+                    return False
 
         # Convert 4BPP to 8BPP
         if bpp == 4:
@@ -78,6 +103,8 @@ def convert_texture(tdx_file):
             converted_image.save(f'{filename[:-4]}.png', "PNG")
         else:
             converted_image.show()
+        log.debug(f'Converted image successfully written to disk.')
+        return True
 
 # ---Main function---
 # Logging
@@ -89,10 +116,19 @@ files_to_convert = filedialog.askopenfilenames(filetypes=[('TDX files', "*.tdx")
 if files_to_convert == "NULL":
     exit()
 
+counter = 0
 for filename in files_to_convert:
-    convert_texture(filename)
+    log.debug(f'Attempting to convert {filename}')
+    result = convert_texture(filename)
+    if result:
+        counter += 1
+    else:
+        log.error(f'IndexError caught in file {filename}')
+        images_failed_to_convert.append(filename)
+
+log.debug(f'Conversion completed. ({counter}/{len(files_to_convert)} files successfully converted.)')
 
 if images_failed_to_convert:
-    log.warn(f'Some images failed to convert. A list is displayed below.')
+    log.warning(f'Some images failed to convert. A list is displayed below.')
     for img in images_failed_to_convert:
-        log.warn(img)
+        log.warning(img)
