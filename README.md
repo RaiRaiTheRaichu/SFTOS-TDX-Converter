@@ -8,7 +8,7 @@ Currently, there is no way to convert textures back into .txd format, which will
 
 *Precompiled Binary Method:*
 
-1. Download the latest `TXD Converter.exe` file from https://github.com/RaiRaiTheRaichu/SFTOS-TDX-Converter/Releases
+1. Download the latest `TXD Converter.exe` file from [https://github.com/RaiRaiTheRaichu/SFTOS-TDX-Converter/Releases](https://github.com/RaiRaiTheRaichu/SFTOS-TDX-Converter/releases)
 2. Run `TXD Converter.exe` and select your .txd files. Multiple files can be selected at once.
 
 Beware of any false positives caused by an antivirus - python scripts compiled into .exe files tend to trigger AV software. When in doubt, you can always use the manual method below.
