@@ -1,3 +1,5 @@
+import math
+
 from PIL import Image
 from io import open
 from tkinter import filedialog
@@ -11,7 +13,7 @@ def convert_texture(tdx_file):
         file.seek(int('0x0000004', base=16))
         width = int.from_bytes(file.read(2), byteorder='little')
         height = int.from_bytes(file.read(2), byteorder='little')
-        bpp = int.from_bytes(file.read(2), byteorder='little')
+        bpp = int.from_bytes(file.read(1), byteorder='little')
 
         # Swizzle data
         file.seek(int('0x00000106', base=16))
@@ -26,7 +28,10 @@ def convert_texture(tdx_file):
 
         # Pixel data
         file.seek(int('0x00000560', base=16))
-        pixel_data = file.read(width * height)
+        if bpp == 4:
+            pixel_data = file.read(math.floor((width * height) / 2))
+        if bpp == 8:
+            pixel_data = file.read(width * height)
 
         # Handle swizzled pixels
         if is_swizzled:
@@ -37,7 +42,10 @@ def convert_texture(tdx_file):
 
         # Convert 4BPP to 8BPP
         if bpp == 4:
-            pixel_data = helpers.convert_to_8bpp(pixel_data)
+            if not len(pixel_data) == width*height:
+                pixel_data = helpers.convert_to_8bpp(pixel_data)
+
+        assert len(pixel_data) == width*height, f'Pixel data does not contain the expected number of pixels for this image!\nExpected: {width*height}, got {len(pixel_data)}'
 
         # Build converted PNG image
         converted_image = Image.new("P",(width, height))
@@ -50,7 +58,6 @@ def convert_texture(tdx_file):
 
         # Save the image
         converted_image.save(f'{filename[:-4]}.png', "PNG")
-
 
 # ---Main function---
 
