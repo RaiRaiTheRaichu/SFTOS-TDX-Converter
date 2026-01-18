@@ -25,17 +25,17 @@ jobs:
         pip install Pillow
     - name: Build executable
       run: |
-        pyinstaller --onefile --name "TXD Converter" --noconsole ./main.py
+        pyinstaller --onefile --name "TXD_Converter" --noconsole ./main.py
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: TXD_Converter_Release
-        path: "dist/TXD Converter.exe"
+        path: "dist/TXD_Converter.exe"
     - name: Release build
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "Latest"
         files: |
-          dist/TXD Converter.exe
+          dist/TXD_Converter.exe
         
