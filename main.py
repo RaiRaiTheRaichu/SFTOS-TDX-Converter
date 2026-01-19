@@ -51,7 +51,12 @@ def convert_texture(tdx_file: str) -> Image:
             file.seek(int('0x00000160', base=16))
             palette = file.read(1024)
 
-        rgb_palette, alpha_palette = helpers.get_palette(palette, bpp)
+        try:
+            rgb_palette, alpha_palette = helpers.get_palette(palette, bpp)
+        except exception as e:
+            images_failed_to_convert[filename] = f'Failed to create palette data (reason: {e})'
+            log.error(f'Error creating palette data. Skipping...')
+            return
 
         # Pixel data
         if is_pal_swizzled:
