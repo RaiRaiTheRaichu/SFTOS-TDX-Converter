@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Tuple
 
 debug_mode = '--debug' in sys.argv
 file_mode = not '--nofile' in sys.argv
@@ -31,3 +32,10 @@ def set_handlers(log):
         log.addHandler(file_handler)
 
     return log
+
+def dump_failed_conversions(image_list: dict):
+    with open('error_list.csv', "w") as output:
+        output.write(f'File path,Error\n')
+        for image in image_list.keys():
+            output.write(f'{image},{image_list[image]}\n')
+    return

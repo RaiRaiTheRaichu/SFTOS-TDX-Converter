@@ -26,12 +26,13 @@ Textures will be converted in the same folder location as the original.
 You can run the program via commandline and use additional options.
 
 --dryrun = Results in no file-saving, but opens the converted image in your default app for PNG files.
---debug = Results in additional debug output, including an `output.log` generated in the program's directory.
+--debug = Results in additional debug output, including an `output.log` and `error_list.csv` file generated in the program's directory.
 --nofile = Can be used alongside --debug, skips creating/writing text to the `output.log` file.
+--folder = Opens a folder selection menu instead of file selection, will recursively scan for texture files.
 
 ### Known issues
 
-None at the moment.
+Some .TXD files still fail to convert or are handled improperly.
 
 Converting back to the .TXD file format is currently not supported.
 

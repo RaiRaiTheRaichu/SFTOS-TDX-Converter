@@ -1,9 +1,14 @@
+import math
 import sys
+import os
 
-def get_save_option():
+def get_save_option() -> bool:
     return not '--dryrun' in sys.argv
 
-def get_palette(color_palette: bytes, mode: int):
+def get_folder_mode() -> bool:
+    return '--folder' in sys.argv
+
+def get_palette(color_palette: bytes, mode: int) -> tuple[bytearray, bytearray]:
     rgb_array = bytearray()
     alpha_array = bytearray()
 
@@ -29,7 +34,7 @@ def get_palette(color_palette: bytes, mode: int):
 
     return rgb_array, alpha_array
 
-def convert_to_8bpp(pixel_data: bytes):
+def convert_to_8bpp(pixel_data: bytes) -> bytearray:
     converted_8bpp = bytearray()
     for pixel in pixel_data:
         first_pixel = (pixel >> 4) & 0x0F
@@ -37,3 +42,19 @@ def convert_to_8bpp(pixel_data: bytes):
         converted_8bpp.append(second_pixel)
         converted_8bpp.append(first_pixel)
     return converted_8bpp
+
+def pad_bytes(bytes_in: bytes, pad_length: int) -> bytes:
+    array = bytearray(bytes_in)
+    array.extend(b'x\0' * math.floor(pad_length/2))
+    return array
+
+def scan_folders(folder_path: str) -> list[str]:
+    file_list = []
+
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.lower().endswith(".tdx"):
+                full_path = os.path.join(root, file)
+                file_list.append(full_path)
+
+    return file_list
